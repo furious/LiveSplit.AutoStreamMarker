@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<updates>
+	<update version="1.0">
+		<files>
+			<file path="download/1.0/LiveSplit.TwitchHighlighter.dll" status="changed" />
+		</files>
+		<changelog>
+			<change>Initial release.</change>
+		</changelog>
+	</update>
+</updates>
