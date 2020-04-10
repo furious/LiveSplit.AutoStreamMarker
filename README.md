@@ -1,6 +1,6 @@
-﻿LiveSplit.TwitchHighlighter
+﻿LiveSplit.AutoStreamMarker
 ========================
-Twitch Highlighter is a [LiveSplit](http://livesplit.org/) component that automatically mark every run in your stream VOD.
+Auto Stream Marker is a [LiveSplit](http://livesplit.org/) component that automatically mark every run in your stream VOD.
 
 Features
 --------
@@ -9,9 +9,9 @@ Features
 
 Installation
 ------------
-1. [Download Twitch Highlighter](https://github.com/furious/LiveSplit.TwitchHighlighter/releases/latest)
-2. Close LiveSplit if it was open and place `LiveSplit.TwitchHighlighter.dll` in the `Components` **directory** of LiveSplit.
-3. Start LiveSplit and add **Twitch Highlighter** to your LiveSplit **layout** (It is in the "**Other**" category)
+1. [Download Auto Stream Marker](https://github.com/furious/LiveSplit.AutoStreamMarker/releases/latest)
+2. Close LiveSplit if it was open and place `LiveSplit.AutoStreamMarker.dll` in the `Components` **directory** of LiveSplit.
+3. Start LiveSplit and add **Auto Stream Marker** to your LiveSplit **layout** (It is in the "**Other**" category)
 4. Edit the component settings, connect your Twitch account.
 
 How to use
