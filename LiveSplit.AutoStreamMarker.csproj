@@ -4,12 +4,12 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{16B6E638-E21D-4B8A-88B0-4BBA25E95913}</ProjectGuid>
+    <ProjectGuid>{D0AF091B-0222-4E5E-91B7-3078D451AF7C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LiveSplit.TwitchHighlighter</RootNamespace>
-    <AssemblyName>LiveSplit.TwitchHighlighter</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <RootNamespace>LiveSplit.AutoStreamMarker</RootNamespace>
+    <AssemblyName>LiveSplit.AutoStreamMarker</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\SOFTWARES\LiveSplit\Components\</OutputPath>
+    <OutputPath>..\..\bin\Debug\Components\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -43,33 +43,40 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="LiveSplit.Core">
-      <HintPath>..\..\..\SOFTWARES\LiveSplit\LiveSplit.Core.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.QualityTools.Testing.Fakes, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="UpdateManager">
-      <HintPath>..\..\..\SOFTWARES\LiveSplit\UpdateManager.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UI\Components\TwitchHighlighterComponent.cs" />
-    <Compile Include="UI\Components\TwitchHighlighterFactory.cs" />
-    <Compile Include="UI\Components\TwitchHighlighterSettings.cs">
+    <Compile Include="UI\Components\AutoStreamMarkerComponent.cs" />
+    <Compile Include="UI\Components\AutoStreamMarkerFactory.cs" />
+    <Compile Include="UI\Components\AutoStreamMarkerSettings.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\Components\TwitchHighlighterSettings.Designer.cs">
-      <DependentUpon>TwitchHighlighterSettings.cs</DependentUpon>
+    <Compile Include="UI\Components\AutoStreamMarkerSettings.Designer.cs">
+      <DependentUpon>AutoStreamMarkerSettings.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="UI\Components\TwitchHighlighterSettings.resx">
-      <DependentUpon>TwitchHighlighterSettings.cs</DependentUpon>
+    <EmbeddedResource Include="UI\Components\AutoStreamMarkerSettings.resx">
+      <DependentUpon>AutoStreamMarkerSettings.cs</DependentUpon>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\LiveSplit.Core\LiveSplit.Core.csproj">
+      <Project>{6de847db-20a3-4848-aeee-1b4364aecdfb}</Project>
+      <Name>LiveSplit.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\UpdateManager\UpdateManager.csproj">
+      <Project>{56dea3a0-2eb7-493b-b50f-a5e3aa8ae52a}</Project>
+      <Name>UpdateManager</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
