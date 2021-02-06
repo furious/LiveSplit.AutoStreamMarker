@@ -22,7 +22,9 @@ namespace LiveSplit.UI.Components
         public override string ComponentName => "Auto Stream Marker";
 
         public bool Activated { get; set; }
-        
+        public bool ShowLoginInfo { get; set; }
+        public bool ShowStreamInfo { get; set; }
+
         private LiveSplitState State { get; set; }
         private DynamicJsonConverter Converter { get; set; }
         private AutoStreamMarkerSettings Settings { get; set; }
@@ -35,6 +37,8 @@ namespace LiveSplit.UI.Components
         public AutoStreamMarkerComponent(LiveSplitState state)
         {
             Activated = true;
+            ShowLoginInfo = true;
+            ShowStreamInfo = true;
 
             State = state;
             Settings = new AutoStreamMarkerSettings();
@@ -42,14 +46,7 @@ namespace LiveSplit.UI.Components
             State.OnStart += State_OnStart;
             State.OnSplit += State_OnSplit;
             State.OnReset += State_OnReset;
-
-            Notification = new NotifyIcon()
-            {
-                Visible = false,
-                BalloonTipTitle = "Auto Stream Marker",
-                Icon = System.Drawing.Icon.ExtractAssociatedIcon(Application.ExecutablePath)
-            };
-
+            
             ServicePointManager.Expect100Continue = true;
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
             ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
@@ -64,13 +61,11 @@ namespace LiveSplit.UI.Components
             State.OnStart -= State_OnStart;
             State.OnSplit -= State_OnSplit;
             State.OnReset -= State_OnReset;
-            Notification.Dispose();
             Web.Dispose();
         }
 
         public override void Update(IInvalidator invalidator, LiveSplitState state, float width, float height, LayoutMode mode)
         {
-            Notification.Visible = Settings.Notify;
         }
 
         public override Control GetSettingsControl(LayoutMode mode)
@@ -85,23 +80,25 @@ namespace LiveSplit.UI.Components
 
         public override void SetSettings(XmlNode settings)
         {
+            ShowLoginInfo =
+            ShowStreamInfo = true;
             Settings.SetSettings(settings);
         }
 
         private void State_OnStart(object sender, EventArgs e)
         {
-            Task.Factory.StartNew(() => { StreamMarker("started"); });
+            Task.Run(() => StreamMarker("started"));
         }
 
         private void State_OnSplit(object sender, EventArgs e)
         {
             if (State.CurrentPhase == TimerPhase.Ended)
             {
-                Task.Factory.StartNew(() => { StreamMarker("finished"); });
+                Task.Run(() => StreamMarker("finished"));
             }
             else if(State.CurrentPhase == TimerPhase.Running && Settings.MarkEverySplit)
             {
-                StreamMarker(String.Format("split \"{0}\"", State.CurrentSplit.Name));
+                Task.Run(() => StreamMarker(String.Format("split \"{0}\"", State.CurrentSplit.Name)));
             }
         }
 
@@ -109,21 +106,36 @@ namespace LiveSplit.UI.Components
         {
             if (e != TimerPhase.Ended && Settings.MarkResets)
             {
-                Task.Factory.StartNew(() => { StreamMarker("reseted"); });
+                Task.Run(() => StreamMarker("reseted"));
             }
         }
-
+        private void Notify(String message)
+        {
+            MessageBox.Show(message); return;
+            Notification.BalloonTipText = message;
+            Notification.ShowBalloonTip(1000);
+        }
         private void StreamMarker(string action)
         {
-            Action = action;
+            Action = String.Format(
+                "Run #{0} {1}: {2} - {3}",
+                State.Run.AttemptCount, action,
+                String.IsNullOrEmpty(State.Run.GameName) ? "No Game" : State.Run.GameName,
+                String.IsNullOrEmpty(State.Run.CategoryName) ? "No Category" : State.Run.CategoryName
+            );
             try
             {
                 Web.Headers["Authorization"] = "Bearer " + Settings.TwitchOAuth;
                 HandleUser(Web.DownloadString(new Uri("https://api.twitch.tv/helix/users")));
-                Console.WriteLine("ok");
+                Console.WriteLine(Action);
             }
             catch (WebException ex)
             {
+                if (ShowLoginInfo)
+                {
+                    ShowLoginInfo = false;
+                    Notify("Your need to login with your Twitch account in the Auto Stream Marker layout settings...");
+                }
                 Console.WriteLine(ex.Message);
             }
         }
@@ -137,6 +149,7 @@ namespace LiveSplit.UI.Components
 
                 if (User.data is List<Object> && User.data.Count > 0)
                 {
+                    ShowLoginInfo = true;
                     HandleStream(Web.DownloadString(new Uri(String.Format("https://api.twitch.tv/helix/streams?user_id={0}", User.data[0].id))));
                     return;
                 }
@@ -145,39 +158,31 @@ namespace LiveSplit.UI.Components
             {
                 Console.WriteLine(ex.Message);
             }
-            Notification.BalloonTipText = "Your need to login with your Twitch account in the Auto Stream Marker layout settings...";
-            Notification.ShowBalloonTip(1000);
         }
         private void HandleStream(String data)
         {
-            //if (e.Error == null && e.Cancelled == false)
             try
             {
-                Console.WriteLine("wegsooSd");
                 Stream = JSON.FromString(data);
                 if (Stream.data is List<Object> && Stream.data.Count > 0 && String.Equals(Stream.data[0].type, "live"))
                 {
-                    String title = String.Format("Run #{0} {1}: {2} - {3}", State.Run.AttemptCount, Action, State.Run.GameName, State.Run.CategoryName);
+                    ShowStreamInfo = true;
                     NameValueCollection values = new NameValueCollection
                     {
                         { "user_id", User.data[0].id },
-                        { "description", title }
+                        { "description", Action }
                     };
-                    Console.WriteLine("wegsood");
                     Console.WriteLine(Web.UploadValues(new Uri("https://api.twitch.tv/helix/streams/markers"), "POST", values));
-                        
-                    Notification.BalloonTipText = title;
-                    Notification.ShowBalloonTip(1000);
                 }
-                else
+                else if (ShowStreamInfo)
                 {
-                    Notification.BalloonTipText = "Your channel isn't live, start your stream to auto mark the runs in your vods...";
-                    Notification.ShowBalloonTip(1000);
+                    ShowStreamInfo = false;
+                    Notify("Your channel isn't live! Start your stream to auto mark the runs in your VODs...");
                 }
             }
             catch (WebException ex)
             {
-                Console.WriteLine(data + ex.Message);
+                Console.WriteLine(ex.Message);
             }
         }
 

@@ -2,10 +2,10 @@
 <updates>
 	<update version="1.0">
 		<files>
-			<file path="download/1.0/LiveSplit.TwitchHighlighter.dll" status="changed" />
+			<file path="LiveSplit.AutoStreamMarker.dll" status="changed" />
 		</files>
 		<changelog>
-			<change>Initial release.</change>
+			<change>Fixed bugs and using correct Twitch API endpoints.</change>
 		</changelog>
 	</update>
 </updates>

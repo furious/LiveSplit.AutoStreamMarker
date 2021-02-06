@@ -31,10 +31,8 @@
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.chkMarkResets = new System.Windows.Forms.CheckBox();
             this.chkMarkEverySplit = new System.Windows.Forms.CheckBox();
-            this.chkNotify = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.Connect = new System.Windows.Forms.Button();
-            this.Channels = new System.Windows.Forms.ComboBox();
             this.Avatar = new System.Windows.Forms.PictureBox();
             this.Username = new System.Windows.Forms.Label();
             this.groupBox2.SuspendLayout();
@@ -46,7 +44,6 @@
             // 
             this.groupBox2.Controls.Add(this.chkMarkResets);
             this.groupBox2.Controls.Add(this.chkMarkEverySplit);
-            this.groupBox2.Controls.Add(this.chkNotify);
             this.groupBox2.Dock = System.Windows.Forms.DockStyle.Top;
             this.groupBox2.Location = new System.Drawing.Point(0, 128);
             this.groupBox2.Name = "groupBox2";
@@ -59,7 +56,7 @@
             // 
             this.chkMarkResets.AutoSize = true;
             this.chkMarkResets.Dock = System.Windows.Forms.DockStyle.Top;
-            this.chkMarkResets.Location = new System.Drawing.Point(3, 50);
+            this.chkMarkResets.Location = new System.Drawing.Point(3, 33);
             this.chkMarkResets.Name = "chkMarkResets";
             this.chkMarkResets.Size = new System.Drawing.Size(469, 17);
             this.chkMarkResets.TabIndex = 7;
@@ -70,28 +67,16 @@
             // 
             this.chkMarkEverySplit.AutoSize = true;
             this.chkMarkEverySplit.Dock = System.Windows.Forms.DockStyle.Top;
-            this.chkMarkEverySplit.Location = new System.Drawing.Point(3, 33);
+            this.chkMarkEverySplit.Location = new System.Drawing.Point(3, 16);
             this.chkMarkEverySplit.Name = "chkMarkEverySplit";
             this.chkMarkEverySplit.Size = new System.Drawing.Size(469, 17);
             this.chkMarkEverySplit.TabIndex = 8;
             this.chkMarkEverySplit.Text = "Mark every split in the VOD";
             this.chkMarkEverySplit.UseVisualStyleBackColor = true;
             // 
-            // chkNotify
-            // 
-            this.chkNotify.AutoSize = true;
-            this.chkNotify.Dock = System.Windows.Forms.DockStyle.Top;
-            this.chkNotify.Location = new System.Drawing.Point(3, 16);
-            this.chkNotify.Name = "chkNotify";
-            this.chkNotify.Size = new System.Drawing.Size(469, 17);
-            this.chkNotify.TabIndex = 9;
-            this.chkNotify.Text = "Show notifications in the TrayIcon";
-            this.chkNotify.UseVisualStyleBackColor = true;
-            // 
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.Connect);
-            this.groupBox1.Controls.Add(this.Channels);
             this.groupBox1.Controls.Add(this.Avatar);
             this.groupBox1.Controls.Add(this.Username);
             this.groupBox1.Dock = System.Windows.Forms.DockStyle.Top;
@@ -104,23 +89,13 @@
             // 
             // Connect
             // 
-            this.Connect.Location = new System.Drawing.Point(116, 53);
+            this.Connect.Location = new System.Drawing.Point(116, 67);
             this.Connect.Name = "Connect";
             this.Connect.Size = new System.Drawing.Size(181, 30);
             this.Connect.TabIndex = 7;
             this.Connect.Text = "Connect/Reconnect";
             this.Connect.UseVisualStyleBackColor = true;
             this.Connect.Click += new System.EventHandler(this.ShowLogin);
-            // 
-            // Channels
-            // 
-            this.Channels.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.Channels.Enabled = false;
-            this.Channels.FormattingEnabled = true;
-            this.Channels.Location = new System.Drawing.Point(115, 89);
-            this.Channels.Name = "Channels";
-            this.Channels.Size = new System.Drawing.Size(181, 21);
-            this.Channels.TabIndex = 6;
             // 
             // Avatar
             // 
@@ -138,7 +113,7 @@
             // 
             this.Username.AutoSize = true;
             this.Username.Font = new System.Drawing.Font("Tahoma", 15F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Username.Location = new System.Drawing.Point(112, 26);
+            this.Username.Location = new System.Drawing.Point(112, 40);
             this.Username.Name = "Username";
             this.Username.Size = new System.Drawing.Size(184, 24);
             this.Username.TabIndex = 4;
@@ -165,9 +140,7 @@
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.CheckBox chkMarkResets;
         private System.Windows.Forms.CheckBox chkMarkEverySplit;
-        private System.Windows.Forms.CheckBox chkNotify;
         private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.ComboBox Channels;
         private System.Windows.Forms.PictureBox Avatar;
         private System.Windows.Forms.Label Username;
         private System.Windows.Forms.Button Connect;
