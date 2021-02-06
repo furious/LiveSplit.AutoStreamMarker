@@ -8,13 +8,14 @@ using System.IO;
 using System.Threading;
 using System.Text;
 using System.Collections.Generic;
+using System.Net.Sockets;
 
 namespace LiveSplit.UI.Components
 {
     public partial class AutoStreamMarkerSettings : UserControl
     {
-        public HttpListener Listener;
         public string TwitchClientID = "1202m5dzaxw5ohdw0r39ddfpuvcfdd";
+        bool Listening = true;
         public string TwitchOAuth { get; set; }
         public bool MarkEverySplit { get; set; }
         public bool MarkResets { get; set; }
@@ -79,9 +80,6 @@ namespace LiveSplit.UI.Components
         {
                 System.Diagnostics.Process.Start("https://id.twitch.tv/oauth2/authorize?response_type=token&redirect_uri=http://localhost:45000/code&scope=user:edit:broadcast&force_verify=true&client_id=" + TwitchClientID);
 
-                Listener = new HttpListener();
-                Listener.Prefixes.Add("http://*:45000/");
-                Listener.Start();
                 Listen();
         }
        
@@ -107,32 +105,48 @@ namespace LiveSplit.UI.Components
        
         private async void Listen()
         {
-            bool listen = true;
-            while (listen)
+            TcpListener listener = new TcpListener(IPAddress.Loopback, 45000);
+            listener.Start();
+            Listening = true;
+            while (Listening)
             {
-                var context = await Listener.GetContextAsync();
-                Console.WriteLine("Response" + context.Request.Url.AbsolutePath);
+                Socket sock = listener.AcceptSocket();
+                Thread.Sleep(100);
+                byte[] buffer = new byte[32];
+                String response = "", request = "", status = "200 OK";
+                while (sock.Available > 0)
+                {
+                    int bytes = sock.Receive(buffer);
+                    request += Encoding.ASCII.GetString(buffer, 0, bytes);
+                }
 
-                String response = "";
-
-                context.Response.StatusCode = 200;
-                if (context.Request.Url.AbsolutePath == "/code")
+                if (request.Contains("GET /code"))
                 {
                     response = "<html><body onload=\"document.location.href = document.location.hash.replace('#','/token?');\"></body></html>";
                 }
-                else if (context.Request.Url.AbsolutePath == "/token")
+                else if (request.Contains("GET /token"))
                 {
                     response = "<html style='display:table; width:100%; height:100%'><body style='display:table-cell; vertical-align:middle; text-align:center; font-family:Sans-serif'><h1>Done, you can close this window now...</h1></body></html>";
-                    TwitchOAuth = context.Request.QueryString.Get("access_token");
+                    TwitchOAuth = Regex.Match(request, "access_token=([^&]+)").Groups[1]?.Value ?? "";
                     FetchUser();
-                    listen = false;
+                    Listening = false;
+                }
+                else
+                {
+                    status = "404 Not Found";
+                    response = "Not Found";
                 }
 
-                context.Response.ContentLength64 = response.Length;
-                context.Response.OutputStream.Write(Encoding.UTF8.GetBytes(response), 0, response.Length);
-                context.Response.OutputStream.Close();
+                sock.Send(Encoding.ASCII.GetBytes(
+                    $"HTTP/1.1 {status}\r\n" +
+                    "Content-Type: text/html\r\n" +
+                    "Content-Length: " + response.Length.ToString() + "\r\n\n" +
+                    response
+                ));
+                sock.Shutdown(SocketShutdown.Both);
+                sock.Close();
             }
-            Listener.Stop();
+            listener.Stop();
         }
     }
 }

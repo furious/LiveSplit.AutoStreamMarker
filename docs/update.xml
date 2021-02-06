@@ -1,11 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <updates>
-	<update version="1.0">
+	<update version="1.1.1">
 		<files>
-			<file path="LiveSplit.AutoStreamMarker.dll" status="changed" />
+			<file path="Components/LiveSplit.AutoStreamMarker.dll" status="changed" />
+		</files>
+		<changelog>
+			<change>Fixed update bug (please, download it again from the github), now it receives Twitch API tokens without running it as Administrator.</change>
+		</changelog>
+	</update>
+	<update version="1.1">
+		<files>
+			<file path="Components/LiveSplit.AutoStreamMarker.dll" status="changed" />
 		</files>
 		<changelog>
 			<change>Fixed bugs and using correct Twitch API endpoints.</change>
+		</changelog>
+	</update>
+	<update version="1.0">
+		<files>
+			<file path="Components/LiveSplit.AutoStreamMarker.dll" status="changed" />
+		</files>
+		<changelog>
+			<change>Initial release.</change>
 		</changelog>
 	</update>
 </updates>
