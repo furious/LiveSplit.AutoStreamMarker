@@ -18,10 +18,10 @@ namespace LiveSplit.UI.Components
 
         public string UpdateName => ComponentName;
 
-        public string XMLURL => "https://furious.github.io/LiveSplit.AutoStreamMarker/update.xml";
 
-        public string UpdateURL => "https://github.com/furious/LiveSplit.AutoStreamMarker/releases/";
+        public string UpdateURL => "https://furious.github.io/LiveSplit.AutoStreamMarker/";
+        public string XMLURL => this.UpdateURL + "update.xml";
 
-        public Version Version => Version.Parse("1.0.0");
+        public Version Version => Version.Parse("1.1.1");
     }
 }
