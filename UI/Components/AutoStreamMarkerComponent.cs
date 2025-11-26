@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using System.Net;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Collections;
 using System.Collections.Specialized;
@@ -54,6 +55,7 @@ namespace LiveSplit.UI.Components
             Web = new WebClient();
             Web.Headers.Add("Client-ID", Settings.TwitchClientID);
             Web.Headers.Add("Accept", "application/vnd.twitchtv.v5+json");
+            Web.Encoding = Encoding.UTF8;
         }
 
         public override void Dispose()

@@ -33,6 +33,7 @@ namespace LiveSplit.UI.Components
             Web = new WebClient();
             Web.Headers.Add("Client-ID", TwitchClientID);
             Web.Headers.Add("Accept", "application/vnd.twitchtv.v5+json");
+            Web.Encoding = Encoding.UTF8;
 
             chkMarkEverySplit.DataBindings.Add("Checked", this, "MarkEverySplit");
             chkMarkResets.DataBindings.Add("Checked", this, "MarkResets");
