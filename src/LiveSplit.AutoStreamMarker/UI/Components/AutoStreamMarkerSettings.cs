@@ -52,14 +52,17 @@ namespace LiveSplit.UI.Components
             Web.Headers.Add("Client-ID", TwitchClientID);
             Web.Headers.Add("Accept", "application/vnd.twitchtv.v5+json");
 
-            chkMarkEverySplit.DataBindings.Add("Checked", this, "MarkEverySplit");
-            chkMarkResets.DataBindings.Add("Checked", this, "MarkResets");
-            chkNotificationsEnabled.DataBindings.Add("Checked", this, "NotificationsEnabled");
-            chkObsEnabled.DataBindings.Add("Checked", this, "ObsEnabled");
-            txtObsUrl.DataBindings.Add("Text", this, "ObsUrl");
-            txtObsPassword.DataBindings.Add("Text", this, "ObsPassword");
-            chkLogEnabled.DataBindings.Add("Checked", this, "LogEnabled");
-            txtLogFolder.DataBindings.Add("Text", this, "LogFolder");
+            // OnPropertyChanged so each control pushes into its property immediately -
+            // the default OnValidation mode only pushes on focus loss, which txtLogFolder
+            // never gets (its text is set from a modal FolderBrowserDialog, not typed).
+            chkMarkEverySplit.DataBindings.Add("Checked", this, "MarkEverySplit", false, DataSourceUpdateMode.OnPropertyChanged);
+            chkMarkResets.DataBindings.Add("Checked", this, "MarkResets", false, DataSourceUpdateMode.OnPropertyChanged);
+            chkNotificationsEnabled.DataBindings.Add("Checked", this, "NotificationsEnabled", false, DataSourceUpdateMode.OnPropertyChanged);
+            chkObsEnabled.DataBindings.Add("Checked", this, "ObsEnabled", false, DataSourceUpdateMode.OnPropertyChanged);
+            txtObsUrl.DataBindings.Add("Text", this, "ObsUrl", false, DataSourceUpdateMode.OnPropertyChanged);
+            txtObsPassword.DataBindings.Add("Text", this, "ObsPassword", false, DataSourceUpdateMode.OnPropertyChanged);
+            chkLogEnabled.DataBindings.Add("Checked", this, "LogEnabled", false, DataSourceUpdateMode.OnPropertyChanged);
+            txtLogFolder.DataBindings.Add("Text", this, "LogFolder", false, DataSourceUpdateMode.OnPropertyChanged);
 
             ServicePointManager.Expect100Continue = true;
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
@@ -82,6 +85,18 @@ namespace LiveSplit.UI.Components
             ObsPassword = element["ObsPassword"] != null ? SettingsHelper.ParseString(element["ObsPassword"]) : "";
             LogEnabled = element["LogEnabled"] != null && SettingsHelper.ParseBool(element["LogEnabled"]);
             LogFolder = element["LogFolder"] != null ? SettingsHelper.ParseString(element["LogFolder"]) : "";
+
+            // The controls above were bound once in the constructor; since this
+            // class doesn't implement INotifyPropertyChanged, the bindings never
+            // pull these newly-loaded values back into the controls on their own.
+            chkMarkEverySplit.Checked = MarkEverySplit;
+            chkMarkResets.Checked = MarkResets;
+            chkNotificationsEnabled.Checked = NotificationsEnabled;
+            chkObsEnabled.Checked = ObsEnabled;
+            txtObsUrl.Text = ObsUrl;
+            txtObsPassword.Text = ObsPassword;
+            chkLogEnabled.Checked = LogEnabled;
+            txtLogFolder.Text = LogFolder;
 
             if (!String.IsNullOrEmpty(TwitchOAuth))
             {
