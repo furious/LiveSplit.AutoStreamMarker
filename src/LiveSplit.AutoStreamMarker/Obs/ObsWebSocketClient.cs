@@ -100,7 +100,59 @@ namespace LiveSplit.UI.Components
             return SendRequestAsync("CreateRecordChapter", requestData);
         }
 
-        private async Task SendRequestAsync(string requestType, dynamic requestData)
+        /// <summary>
+        /// Returns whether OBS is currently streaming (outputActive) and how
+        /// long the current stream output has been running (outputDuration, ms).
+        /// </summary>
+        public Task<dynamic> GetStreamStatusAsync()
+        {
+            return SendRequestAsync("GetStreamStatus", new DynamicJsonObject());
+        }
+
+        /// <summary>
+        /// Returns whether OBS is currently recording (outputActive) and how
+        /// long the current recording has been running (outputDuration, ms).
+        /// </summary>
+        public Task<dynamic> GetRecordStatusAsync()
+        {
+            return SendRequestAsync("GetRecordStatus", new DynamicJsonObject());
+        }
+
+        /// <summary>
+        /// Reads a single value out of OBS's current profile config (basic.ini).
+        /// </summary>
+        public async Task<string> GetProfileParameterAsync(string category, string name)
+        {
+            dynamic requestData = new DynamicJsonObject();
+            requestData.parameterCategory = category;
+            requestData.parameterName = name;
+
+            dynamic response = await SendRequestAsync("GetProfileParameter", requestData).ConfigureAwait(false);
+            return (response != null && response.parameterValue != null) ? (string)response.parameterValue : null;
+        }
+
+        /// <summary>
+        /// Whether OBS's currently configured recording format supports
+        /// embedded chapters. Only Hybrid MP4 and MKV do; anything else
+        /// (plain MP4, MOV, fragmented MP4/MOV, FLV, TS, HLS, ...) silently
+        /// drops CreateRecordChapter requests.
+        /// </summary>
+        public async Task<bool> RecordingSupportsChaptersAsync()
+        {
+            string mode = await GetProfileParameterAsync("Output", "Mode").ConfigureAwait(false);
+            string category = String.Equals(mode, "Advanced", StringComparison.OrdinalIgnoreCase) ? "AdvOut" : "SimpleOutput";
+
+            string format = await GetProfileParameterAsync(category, "RecFormat2").ConfigureAwait(false);
+            if (String.IsNullOrEmpty(format))
+            {
+                format = await GetProfileParameterAsync(category, "RecFormat").ConfigureAwait(false);
+            }
+
+            return String.Equals(format, "hybrid_mp4", StringComparison.OrdinalIgnoreCase)
+                || String.Equals(format, "mkv", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private async Task<dynamic> SendRequestAsync(string requestType, dynamic requestData)
         {
             if (!IsConnected)
             {
@@ -139,6 +191,8 @@ namespace LiveSplit.UI.Components
                     string comment = (status != null && status.comment != null) ? (string)status.comment : "unknown error";
                     throw new Exception($"OBS request \"{requestType}\" failed: {comment}");
                 }
+
+                return response.responseData;
             }
             finally
             {

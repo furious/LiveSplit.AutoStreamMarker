@@ -47,6 +47,11 @@
             this.lblObsPassword = new System.Windows.Forms.Label();
             this.txtObsPassword = new System.Windows.Forms.TextBox();
             this.btnObsTest = new System.Windows.Forms.Button();
+            this.chkLogEnabled = new System.Windows.Forms.CheckBox();
+            this.lblLogFolder = new System.Windows.Forms.Label();
+            this.txtLogFolder = new System.Windows.Forms.TextBox();
+            this.btnBrowseLogFolder = new System.Windows.Forms.Button();
+            this.lblLogHint = new System.Windows.Forms.Label();
             this.groupBox2.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -59,7 +64,7 @@
             this.groupBox2.Controls.Add(this.chkMarkResets);
             this.groupBox2.Controls.Add(this.chkMarkEverySplit);
             this.groupBox2.Dock = System.Windows.Forms.DockStyle.Top;
-            this.groupBox2.Location = new System.Drawing.Point(0, 268);
+            this.groupBox2.Location = new System.Drawing.Point(0, 343);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(475, 86);
             this.groupBox2.TabIndex = 13;
@@ -146,6 +151,11 @@
             //
             // groupBox3
             //
+            this.groupBox3.Controls.Add(this.lblLogHint);
+            this.groupBox3.Controls.Add(this.btnBrowseLogFolder);
+            this.groupBox3.Controls.Add(this.txtLogFolder);
+            this.groupBox3.Controls.Add(this.lblLogFolder);
+            this.groupBox3.Controls.Add(this.chkLogEnabled);
             this.groupBox3.Controls.Add(this.btnObsTest);
             this.groupBox3.Controls.Add(this.txtObsPassword);
             this.groupBox3.Controls.Add(this.lblObsPassword);
@@ -155,7 +165,7 @@
             this.groupBox3.Dock = System.Windows.Forms.DockStyle.Top;
             this.groupBox3.Location = new System.Drawing.Point(0, 128);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(475, 140);
+            this.groupBox3.Size = new System.Drawing.Size(475, 215);
             this.groupBox3.TabIndex = 14;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "OBS WebSocket";
@@ -213,6 +223,52 @@
             this.btnObsTest.UseVisualStyleBackColor = true;
             this.btnObsTest.Click += new System.EventHandler(this.TestObsConnection);
             //
+            // chkLogEnabled
+            //
+            this.chkLogEnabled.AutoSize = true;
+            this.chkLogEnabled.Location = new System.Drawing.Point(6, 139);
+            this.chkLogEnabled.Name = "chkLogEnabled";
+            this.chkLogEnabled.Size = new System.Drawing.Size(300, 17);
+            this.chkLogEnabled.TabIndex = 6;
+            this.chkLogEnabled.Text = "Log stream sessions to file";
+            this.chkLogEnabled.UseVisualStyleBackColor = true;
+            //
+            // lblLogFolder
+            //
+            this.lblLogFolder.AutoSize = true;
+            this.lblLogFolder.Location = new System.Drawing.Point(6, 168);
+            this.lblLogFolder.Name = "lblLogFolder";
+            this.lblLogFolder.Size = new System.Drawing.Size(60, 13);
+            this.lblLogFolder.TabIndex = 7;
+            this.lblLogFolder.Text = "Log folder:";
+            //
+            // txtLogFolder
+            //
+            this.txtLogFolder.Location = new System.Drawing.Point(94, 165);
+            this.txtLogFolder.Name = "txtLogFolder";
+            this.txtLogFolder.Size = new System.Drawing.Size(220, 20);
+            this.txtLogFolder.TabIndex = 8;
+            //
+            // btnBrowseLogFolder
+            //
+            this.btnBrowseLogFolder.Location = new System.Drawing.Point(320, 163);
+            this.btnBrowseLogFolder.Name = "btnBrowseLogFolder";
+            this.btnBrowseLogFolder.Size = new System.Drawing.Size(60, 24);
+            this.btnBrowseLogFolder.TabIndex = 9;
+            this.btnBrowseLogFolder.Text = "Browse...";
+            this.btnBrowseLogFolder.UseVisualStyleBackColor = true;
+            this.btnBrowseLogFolder.Click += new System.EventHandler(this.BrowseLogFolder);
+            //
+            // lblLogHint
+            //
+            this.lblLogHint.AutoSize = true;
+            this.lblLogHint.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.lblLogHint.Location = new System.Drawing.Point(6, 192);
+            this.lblLogHint.Name = "lblLogHint";
+            this.lblLogHint.Size = new System.Drawing.Size(400, 13);
+            this.lblLogHint.TabIndex = 10;
+            this.lblLogHint.Text = "Format: H:MM:SS Description. Also used when OBS\'s recording format doesn\'t support chapters.";
+            //
             // AutoStreamMarkerSettings
             //
             this.AutoSize = true;
@@ -220,7 +276,7 @@
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox1);
             this.Name = "AutoStreamMarkerSettings";
-            this.Size = new System.Drawing.Size(475, 354);
+            this.Size = new System.Drawing.Size(475, 429);
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             this.groupBox1.ResumeLayout(false);
@@ -249,5 +305,10 @@
         private System.Windows.Forms.Label lblObsPassword;
         private System.Windows.Forms.TextBox txtObsPassword;
         private System.Windows.Forms.Button btnObsTest;
+        private System.Windows.Forms.CheckBox chkLogEnabled;
+        private System.Windows.Forms.Label lblLogFolder;
+        private System.Windows.Forms.TextBox txtLogFolder;
+        private System.Windows.Forms.Button btnBrowseLogFolder;
+        private System.Windows.Forms.Label lblLogHint;
     }
 }

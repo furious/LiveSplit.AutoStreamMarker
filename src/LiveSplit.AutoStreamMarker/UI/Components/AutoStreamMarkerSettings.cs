@@ -26,6 +26,8 @@ namespace LiveSplit.UI.Components
         public bool ObsEnabled { get; set; }
         public string ObsUrl { get; set; }
         public string ObsPassword { get; set; }
+        public bool LogEnabled { get; set; }
+        public string LogFolder { get; set; }
 
         private WebClient Web { get; set; }
         private ObsWebSocketClient ObsTestClient { get; set; }
@@ -43,6 +45,9 @@ namespace LiveSplit.UI.Components
             ObsUrl = DefaultObsUrl;
             ObsPassword = "";
 
+            LogEnabled = false;
+            LogFolder = "";
+
             Web = new WebClient();
             Web.Headers.Add("Client-ID", TwitchClientID);
             Web.Headers.Add("Accept", "application/vnd.twitchtv.v5+json");
@@ -54,6 +59,8 @@ namespace LiveSplit.UI.Components
             chkObsEnabled.DataBindings.Add("Checked", this, "ObsEnabled");
             txtObsUrl.DataBindings.Add("Text", this, "ObsUrl");
             txtObsPassword.DataBindings.Add("Text", this, "ObsPassword");
+            chkLogEnabled.DataBindings.Add("Checked", this, "LogEnabled");
+            txtLogFolder.DataBindings.Add("Text", this, "LogFolder");
 
             ServicePointManager.Expect100Continue = true;
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
@@ -71,6 +78,8 @@ namespace LiveSplit.UI.Components
             ObsEnabled = element["ObsEnabled"] != null && SettingsHelper.ParseBool(element["ObsEnabled"]);
             ObsUrl = element["ObsUrl"] != null ? SettingsHelper.ParseString(element["ObsUrl"]) : DefaultObsUrl;
             ObsPassword = element["ObsPassword"] != null ? SettingsHelper.ParseString(element["ObsPassword"]) : "";
+            LogEnabled = element["LogEnabled"] != null && SettingsHelper.ParseBool(element["LogEnabled"]);
+            LogFolder = element["LogFolder"] != null ? SettingsHelper.ParseString(element["LogFolder"]) : "";
 
             if (!String.IsNullOrEmpty(TwitchOAuth))
             {
@@ -99,7 +108,9 @@ namespace LiveSplit.UI.Components
             SettingsHelper.CreateSetting(document, parent, "WarnOffline", WarnOffline) ^
             SettingsHelper.CreateSetting(document, parent, "ObsEnabled", ObsEnabled) ^
             SettingsHelper.CreateSetting(document, parent, "ObsUrl", ObsUrl) ^
-            SettingsHelper.CreateSetting(document, parent, "ObsPassword", ObsPassword);
+            SettingsHelper.CreateSetting(document, parent, "ObsPassword", ObsPassword) ^
+            SettingsHelper.CreateSetting(document, parent, "LogEnabled", LogEnabled) ^
+            SettingsHelper.CreateSetting(document, parent, "LogFolder", LogFolder);
         }
 
         private async void TestObsConnection(object sender, EventArgs e)
@@ -130,6 +141,23 @@ namespace LiveSplit.UI.Components
             finally
             {
                 btnObsTest.Enabled = true;
+            }
+        }
+
+        private void BrowseLogFolder(object sender, EventArgs e)
+        {
+            using (var dialog = new FolderBrowserDialog())
+            {
+                dialog.Description = "Select a folder to save stream session logs to.";
+                if (!String.IsNullOrEmpty(LogFolder))
+                {
+                    dialog.SelectedPath = LogFolder;
+                }
+
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    txtLogFolder.Text = dialog.SelectedPath;
+                }
             }
         }
 

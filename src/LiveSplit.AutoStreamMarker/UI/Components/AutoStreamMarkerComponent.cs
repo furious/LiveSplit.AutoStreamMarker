@@ -26,12 +26,15 @@ namespace LiveSplit.UI.Components
         public bool ShowLoginInfo { get; set; }
         public bool ShowStreamInfo { get; set; }
         public bool ShowObsInfo { get; set; }
+        public bool ShowLogInfo { get; set; }
 
         private LiveSplitState State { get; set; }
         private DynamicJsonConverter Converter { get; set; }
         private AutoStreamMarkerSettings Settings { get; set; }
         private NotifyIcon Notification { get; set; }
         private ObsWebSocketClient Obs { get; set; }
+        private StreamSessionLogger SessionLogger { get; set; }
+        private StreamSessionLogger RecordFallbackLogger { get; set; }
         public WebClient Web { get; set; }
         public String Action { get; set; }
         public dynamic User { get; set; }
@@ -43,10 +46,20 @@ namespace LiveSplit.UI.Components
             ShowLoginInfo = true;
             ShowStreamInfo = true;
             ShowObsInfo = true;
+            ShowLogInfo = true;
 
             State = state;
             Settings = new AutoStreamMarkerSettings();
             Obs = new ObsWebSocketClient();
+            SessionLogger = new StreamSessionLogger();
+            RecordFallbackLogger = new StreamSessionLogger();
+
+            Notification = new NotifyIcon
+            {
+                Icon = System.Drawing.SystemIcons.Information,
+                Visible = true,
+                BalloonTipTitle = "Auto Stream Marker"
+            };
 
             State.OnStart += State_OnStart;
             State.OnSplit += State_OnSplit;
@@ -69,6 +82,7 @@ namespace LiveSplit.UI.Components
             State.OnReset -= State_OnReset;
             Web.Dispose();
             Obs.Dispose();
+            Notification.Dispose();
         }
 
         public override void Update(IInvalidator invalidator, LiveSplitState state, float width, float height, LayoutMode mode)
@@ -118,9 +132,11 @@ namespace LiveSplit.UI.Components
         }
         private void Notify(String message)
         {
-            MessageBox.Show(message); return;
+            // Non-blocking Windows notification (rendered by the OS as a toast on
+            // Windows 10+) instead of a MessageBox - a modal dialog would steal
+            // focus and could interrupt a speedrunner mid-attempt.
             Notification.BalloonTipText = message;
-            Notification.ShowBalloonTip(1000);
+            Notification.ShowBalloonTip(5000);
         }
 
         private void Mark(string action)
@@ -137,6 +153,11 @@ namespace LiveSplit.UI.Components
             if (Settings.ObsEnabled)
             {
                 Task.Run(() => TriggerObsChapterAsync(Action));
+            }
+
+            if (Settings.LogEnabled)
+            {
+                Task.Run(() => TriggerStreamLogAsync(Action));
             }
         }
 
@@ -164,9 +185,26 @@ namespace LiveSplit.UI.Components
             try
             {
                 await Obs.EnsureConnectedAsync(Settings.ObsUrl, Settings.ObsPassword);
-                await Obs.CreateRecordChapterAsync(chapterName);
+
+                if (await Obs.RecordingSupportsChaptersAsync())
+                {
+                    await Obs.CreateRecordChapterAsync(chapterName);
+                    Console.WriteLine("OBS chapter marker created: " + chapterName);
+                }
+                else if (!String.IsNullOrEmpty(Settings.LogFolder))
+                {
+                    dynamic recordStatus = await Obs.GetRecordStatusAsync();
+                    bool isRecording = recordStatus != null && recordStatus.outputActive != null && (bool)recordStatus.outputActive;
+                    double durationMs = (recordStatus != null && recordStatus.outputDuration != null) ? Convert.ToDouble(recordStatus.outputDuration) : 0;
+                    RecordFallbackLogger.AppendMark(isRecording, durationMs, Settings.LogFolder, chapterName);
+                    Console.WriteLine("OBS recording format doesn't support chapters, wrote mark to file instead: " + chapterName);
+                }
+                else
+                {
+                    Console.WriteLine("OBS recording format doesn't support chapters and no log folder is configured, mark not saved: " + chapterName);
+                }
+
                 ShowObsInfo = true;
-                Console.WriteLine("OBS chapter marker created: " + chapterName);
             }
             catch (Exception ex)
             {
@@ -174,6 +212,28 @@ namespace LiveSplit.UI.Components
                 {
                     ShowObsInfo = false;
                     Notify("Could not create an OBS chapter marker. Check your OBS WebSocket settings...");
+                }
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        private async Task TriggerStreamLogAsync(string description)
+        {
+            try
+            {
+                await Obs.EnsureConnectedAsync(Settings.ObsUrl, Settings.ObsPassword);
+                dynamic status = await Obs.GetStreamStatusAsync();
+                bool isActive = status != null && status.outputActive != null && (bool)status.outputActive;
+                double durationMs = (status != null && status.outputDuration != null) ? Convert.ToDouble(status.outputDuration) : 0;
+                SessionLogger.AppendMark(isActive, durationMs, Settings.LogFolder, description);
+                ShowLogInfo = true;
+            }
+            catch (Exception ex)
+            {
+                if (ShowLogInfo)
+                {
+                    ShowLogInfo = false;
+                    Notify("Could not log the stream session. Check your OBS WebSocket and log folder settings...");
                 }
                 Console.WriteLine(ex.Message);
             }

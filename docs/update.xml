@@ -6,6 +6,7 @@
 		</files>
 		<changelog>
 			<change>OBS Chapter Marker support via websocket and fixed Twitch connection encoding bug.</change>
+			<change>Added a stream session log: while OBS is streaming, marks are appended to a per-date file.</change>
 		</changelog>
 	</update>
 	<update version="1.1.1">
