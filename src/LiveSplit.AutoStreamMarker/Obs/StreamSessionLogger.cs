@@ -3,12 +3,7 @@ using System.IO;
 
 namespace LiveSplit.UI.Components
 {
-    /// <summary>
-    /// Tracks an OBS output's active/inactive transitions and appends each
-    /// mark to a local, per-date log file as "H:MM:SS Description" - one
-    /// instance per independent OBS output (e.g. streaming vs. recording),
-    /// since each has its own timeline and start time.
-    /// </summary>
+    // Use one instance per independent OBS output (streaming vs. recording) - each has its own timeline.
     public class StreamSessionLogger
     {
         private readonly object WriteLock = new object();
@@ -16,12 +11,6 @@ namespace LiveSplit.UI.Components
         private bool WasActive;
         private string CurrentFilePath;
 
-        /// <summary>
-        /// Appends a mark line to today's (or the current session's) log
-        /// file if the output is active. Does nothing otherwise.
-        /// </summary>
-        /// <param name="isActive">Whether the OBS output is currently running.</param>
-        /// <param name="durationMs">How long the output has been running, in milliseconds.</param>
         public void AppendMark(bool isActive, double durationMs, string folder, string description)
         {
             if (!isActive)

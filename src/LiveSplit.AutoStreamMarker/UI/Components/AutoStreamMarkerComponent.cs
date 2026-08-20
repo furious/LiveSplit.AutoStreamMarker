@@ -132,9 +132,11 @@ namespace LiveSplit.UI.Components
         }
         private void Notify(String message)
         {
-            // Non-blocking Windows notification (rendered by the OS as a toast on
-            // Windows 10+) instead of a MessageBox - a modal dialog would steal
-            // focus and could interrupt a speedrunner mid-attempt.
+            if (!Settings.NotificationsEnabled)
+            {
+                return;
+            }
+
             Notification.BalloonTipText = message;
             Notification.ShowBalloonTip(5000);
         }
@@ -273,7 +275,7 @@ namespace LiveSplit.UI.Components
                     };
                     Console.WriteLine(Web.UploadValues(new Uri("https://api.twitch.tv/helix/streams/markers"), "POST", values));
                 }
-                else if (ShowStreamInfo && Settings.WarnOffline)
+                else if (ShowStreamInfo)
                 {
                     ShowStreamInfo = false;
                     Notify("Your channel isn't live! Start your stream to auto mark the runs in your VODs...");

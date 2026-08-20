@@ -22,7 +22,7 @@ namespace LiveSplit.UI.Components
         public string TwitchOAuth { get; set; }
         public bool MarkEverySplit { get; set; }
         public bool MarkResets { get; set; }
-        public bool WarnOffline { get; set; }
+        public bool NotificationsEnabled { get; set; }
         public bool ObsEnabled { get; set; }
         public string ObsUrl { get; set; }
         public string ObsPassword { get; set; }
@@ -39,7 +39,7 @@ namespace LiveSplit.UI.Components
             TwitchOAuth = "";
             MarkEverySplit =
             MarkResets =
-            WarnOffline = true;
+            NotificationsEnabled = true;
 
             ObsEnabled = false;
             ObsUrl = DefaultObsUrl;
@@ -51,11 +51,10 @@ namespace LiveSplit.UI.Components
             Web = new WebClient();
             Web.Headers.Add("Client-ID", TwitchClientID);
             Web.Headers.Add("Accept", "application/vnd.twitchtv.v5+json");
-            //Web.Encoding = Encoding.UTF8;
 
             chkMarkEverySplit.DataBindings.Add("Checked", this, "MarkEverySplit");
             chkMarkResets.DataBindings.Add("Checked", this, "MarkResets");
-            chkWarnOffline.DataBindings.Add("Checked", this, "WarnOffline");
+            chkNotificationsEnabled.DataBindings.Add("Checked", this, "NotificationsEnabled");
             chkObsEnabled.DataBindings.Add("Checked", this, "ObsEnabled");
             txtObsUrl.DataBindings.Add("Text", this, "ObsUrl");
             txtObsPassword.DataBindings.Add("Text", this, "ObsPassword");
@@ -74,7 +73,10 @@ namespace LiveSplit.UI.Components
             TwitchOAuth = SettingsHelper.ParseString(element["TwitchOAuth"]);
             MarkEverySplit = SettingsHelper.ParseBool(element["MarkEverySplit"]);
             MarkResets = SettingsHelper.ParseBool(element["MarkResets"]);
-            WarnOffline = element["WarnOffline"] == null || SettingsHelper.ParseBool(element["WarnOffline"]);
+            // Falls back to the old "WarnOffline" node for existing users.
+            NotificationsEnabled = element["NotificationsEnabled"] != null
+                ? SettingsHelper.ParseBool(element["NotificationsEnabled"])
+                : (element["WarnOffline"] == null || SettingsHelper.ParseBool(element["WarnOffline"]));
             ObsEnabled = element["ObsEnabled"] != null && SettingsHelper.ParseBool(element["ObsEnabled"]);
             ObsUrl = element["ObsUrl"] != null ? SettingsHelper.ParseString(element["ObsUrl"]) : DefaultObsUrl;
             ObsPassword = element["ObsPassword"] != null ? SettingsHelper.ParseString(element["ObsPassword"]) : "";
@@ -105,7 +107,7 @@ namespace LiveSplit.UI.Components
             SettingsHelper.CreateSetting(document, parent, "TwitchOAuth", TwitchOAuth) ^
             SettingsHelper.CreateSetting(document, parent, "MarkEverySplit", MarkEverySplit) ^
             SettingsHelper.CreateSetting(document, parent, "MarkResets", MarkResets) ^
-            SettingsHelper.CreateSetting(document, parent, "WarnOffline", WarnOffline) ^
+            SettingsHelper.CreateSetting(document, parent, "NotificationsEnabled", NotificationsEnabled) ^
             SettingsHelper.CreateSetting(document, parent, "ObsEnabled", ObsEnabled) ^
             SettingsHelper.CreateSetting(document, parent, "ObsUrl", ObsUrl) ^
             SettingsHelper.CreateSetting(document, parent, "ObsPassword", ObsPassword) ^

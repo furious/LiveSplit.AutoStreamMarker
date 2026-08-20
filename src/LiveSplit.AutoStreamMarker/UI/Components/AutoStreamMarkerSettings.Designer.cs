@@ -33,7 +33,7 @@
         private void InitializeComponent()
         {
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.chkWarnOffline = new System.Windows.Forms.CheckBox();
+            this.chkNotificationsEnabled = new System.Windows.Forms.CheckBox();
             this.chkMarkResets = new System.Windows.Forms.CheckBox();
             this.chkMarkEverySplit = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
@@ -60,7 +60,7 @@
             //
             // groupBox2
             //
-            this.groupBox2.Controls.Add(this.chkWarnOffline);
+            this.groupBox2.Controls.Add(this.chkNotificationsEnabled);
             this.groupBox2.Controls.Add(this.chkMarkResets);
             this.groupBox2.Controls.Add(this.chkMarkEverySplit);
             this.groupBox2.Dock = System.Windows.Forms.DockStyle.Top;
@@ -93,16 +93,16 @@
             this.chkMarkEverySplit.Text = "Mark every split in the VOD";
             this.chkMarkEverySplit.UseVisualStyleBackColor = true;
             //
-            // chkWarnOffline
+            // chkNotificationsEnabled
             //
-            this.chkWarnOffline.AutoSize = true;
-            this.chkWarnOffline.Dock = System.Windows.Forms.DockStyle.Top;
-            this.chkWarnOffline.Location = new System.Drawing.Point(3, 50);
-            this.chkWarnOffline.Name = "chkWarnOffline";
-            this.chkWarnOffline.Size = new System.Drawing.Size(469, 17);
-            this.chkWarnOffline.TabIndex = 9;
-            this.chkWarnOffline.Text = "Notify when the channel isn\'t live";
-            this.chkWarnOffline.UseVisualStyleBackColor = true;
+            this.chkNotificationsEnabled.AutoSize = true;
+            this.chkNotificationsEnabled.Dock = System.Windows.Forms.DockStyle.Top;
+            this.chkNotificationsEnabled.Location = new System.Drawing.Point(3, 50);
+            this.chkNotificationsEnabled.Name = "chkNotificationsEnabled";
+            this.chkNotificationsEnabled.Size = new System.Drawing.Size(469, 17);
+            this.chkNotificationsEnabled.TabIndex = 9;
+            this.chkNotificationsEnabled.Text = "Show notifications for errors and status changes";
+            this.chkNotificationsEnabled.UseVisualStyleBackColor = true;
             //
             // groupBox1
             //
@@ -293,7 +293,7 @@
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.CheckBox chkMarkResets;
         private System.Windows.Forms.CheckBox chkMarkEverySplit;
-        private System.Windows.Forms.CheckBox chkWarnOffline;
+        private System.Windows.Forms.CheckBox chkNotificationsEnabled;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.PictureBox Avatar;
         private System.Windows.Forms.Label Username;

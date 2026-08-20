@@ -9,11 +9,7 @@ using System.Threading.Tasks;
 
 namespace LiveSplit.UI.Components
 {
-    /// <summary>
-    /// Minimal obs-websocket v5 client, just enough to identify/authenticate
-    /// and issue requests such as "CreateRecordChapter".
-    /// See https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md
-    /// </summary>
+    // obs-websocket v5 protocol: https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md
     public class ObsWebSocketClient : IDisposable
     {
         private const int OpHello = 0;
@@ -38,10 +34,7 @@ namespace LiveSplit.UI.Components
 
         public bool IsConnected => Socket != null && Socket.State == WebSocketState.Open;
 
-        /// <summary>
-        /// Connects (or reconnects, if the url/password changed) and waits until
-        /// the session has been identified with the server.
-        /// </summary>
+        // Reconnects if the url/password changed since the last call.
         public async Task EnsureConnectedAsync(string url, string password)
         {
             if (IsConnected && ConnectedUrl == url && ConnectedPassword == password)
@@ -100,27 +93,18 @@ namespace LiveSplit.UI.Components
             return SendRequestAsync("CreateRecordChapter", requestData);
         }
 
-        /// <summary>
-        /// Returns whether OBS is currently streaming (outputActive) and how
-        /// long the current stream output has been running (outputDuration, ms).
-        /// </summary>
+        // Response has outputActive (bool) and outputDuration (ms).
         public Task<dynamic> GetStreamStatusAsync()
         {
             return SendRequestAsync("GetStreamStatus", new DynamicJsonObject());
         }
 
-        /// <summary>
-        /// Returns whether OBS is currently recording (outputActive) and how
-        /// long the current recording has been running (outputDuration, ms).
-        /// </summary>
+        // Response has outputActive (bool) and outputDuration (ms).
         public Task<dynamic> GetRecordStatusAsync()
         {
             return SendRequestAsync("GetRecordStatus", new DynamicJsonObject());
         }
 
-        /// <summary>
-        /// Reads a single value out of OBS's current profile config (basic.ini).
-        /// </summary>
         public async Task<string> GetProfileParameterAsync(string category, string name)
         {
             dynamic requestData = new DynamicJsonObject();
@@ -131,12 +115,7 @@ namespace LiveSplit.UI.Components
             return (response != null && response.parameterValue != null) ? (string)response.parameterValue : null;
         }
 
-        /// <summary>
-        /// Whether OBS's currently configured recording format supports
-        /// embedded chapters. Only Hybrid MP4 and MKV do; anything else
-        /// (plain MP4, MOV, fragmented MP4/MOV, FLV, TS, HLS, ...) silently
-        /// drops CreateRecordChapter requests.
-        /// </summary>
+        // Only Hybrid MP4 and MKV support embedded chapters.
         public async Task<bool> RecordingSupportsChaptersAsync()
         {
             string mode = await GetProfileParameterAsync("Output", "Mode").ConfigureAwait(false);
