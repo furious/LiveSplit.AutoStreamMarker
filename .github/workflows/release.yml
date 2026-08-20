@@ -1,0 +1,136 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+env:
+  # Pinned upstream LiveSplit release tag to build LiveSplit.Core/UpdateManager
+  # against - bump deliberately, not auto-resolved to "latest". Keep in sync
+  # with build.yml.
+  LIVESPLIT_REF: "1.8.37"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout LiveSplit.AutoStreamMarker
+        uses: actions/checkout@v4
+        with:
+          path: component
+
+      - name: Checkout LiveSplit (${{ env.LIVESPLIT_REF }})
+        uses: actions/checkout@v4
+        with:
+          repository: LiveSplit/LiveSplit
+          ref: ${{ env.LIVESPLIT_REF }}
+          submodules: recursive
+          path: livesplit
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Determine tag version
+        id: version
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $version = $tag -replace '^v', ''
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+
+      - name: Verify version consistency
+        shell: pwsh
+        working-directory: component
+        run: |
+          $expected = "${{ steps.version.outputs.version }}"
+
+          $factoryContent = Get-Content "src/LiveSplit.AutoStreamMarker/UI/Components/AutoStreamMarkerFactory.cs" -Raw
+          if ($factoryContent -notmatch 'Version\.Parse\("([\d\.]+)"\)') {
+            Write-Error "Could not find Version.Parse(...) in AutoStreamMarkerFactory.cs"
+            exit 1
+          }
+          $factoryVersion = $Matches[1]
+
+          [xml]$updateXml = Get-Content "docs/update.xml"
+          $xmlVersion = $updateXml.updates.update[0].version
+
+          Write-Host "Tag version:         $expected"
+          Write-Host "Factory version:     $factoryVersion"
+          Write-Host "update.xml version:  $xmlVersion"
+
+          if ($factoryVersion -ne $expected -or $xmlVersion -ne $expected) {
+            Write-Error "Version mismatch: tag=$expected, AutoStreamMarkerFactory.cs=$factoryVersion, docs/update.xml=$xmlVersion. All three must match before tagging a release."
+            exit 1
+          }
+
+      - name: Build
+        working-directory: component
+        run: dotnet build LiveSplit.AutoStreamMarker.slnx -c Release "-p:LsSrcPath=${{ github.workspace }}/livesplit/src"
+
+      - name: Locate built DLL
+        id: build-output
+        shell: pwsh
+        run: |
+          $dll = Get-ChildItem -Path "${{ github.workspace }}" -Recurse -Filter "LiveSplit.AutoStreamMarker.dll" |
+            Where-Object { $_.FullName -match '[\\/]release[\\/]' } |
+            Select-Object -First 1
+          if (-not $dll) {
+            Write-Error "Could not locate the built LiveSplit.AutoStreamMarker.dll"
+            exit 1
+          }
+          "path=$($dll.FullName)" >> $env:GITHUB_OUTPUT
+
+      - name: Extract release notes from docs/update.xml
+        shell: pwsh
+        working-directory: component
+        run: |
+          [xml]$updateXml = Get-Content "docs/update.xml"
+          $entry = $updateXml.updates.update | Where-Object { $_.version -eq "${{ steps.version.outputs.version }}" }
+          $lines = $entry.changelog.change | ForEach-Object { "- $_" }
+          ($lines -join "`n") | Set-Content -Path "$env:RUNNER_TEMP/release-notes.md"
+
+      - name: Create GitHub Release
+        shell: pwsh
+        working-directory: component
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" "${{ steps.build-output.outputs.path }}" `
+            --title "${{ steps.version.outputs.tag }}" `
+            --notes-file "$env:RUNNER_TEMP/release-notes.md"
+
+      - name: Assemble Pages site
+        shell: pwsh
+        working-directory: component
+        run: |
+          $pagesDir = "$env:RUNNER_TEMP/pages"
+          New-Item -ItemType Directory -Force -Path $pagesDir | Out-Null
+          Copy-Item -Path "docs/*" -Destination $pagesDir -Recurse -Force
+          Remove-Item -Path "$pagesDir/Components" -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path "$pagesDir/Components" | Out-Null
+          Copy-Item -Path "${{ steps.build-output.outputs.path }}" -Destination "$pagesDir/Components/LiveSplit.AutoStreamMarker.dll" -Force
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ runner.temp }}/pages
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

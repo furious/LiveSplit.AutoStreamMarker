@@ -185,7 +185,7 @@ FakesAssemblies/
 .LSOverride
 
 # Icon must ends with two \r.
-Icon
+Icon
 
 # Thumbnails
 ._*
@@ -212,3 +212,11 @@ $RECYCLE.BIN/
 *.msi
 *.msm
 *.msp
+
+# =========================
+# Project-specific
+# =========================
+
+# The built DLL served under GitHub Pages is published by the release
+# workflow directly to the Pages deployment - never committed.
+docs/Components/

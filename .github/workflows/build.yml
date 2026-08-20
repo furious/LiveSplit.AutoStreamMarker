@@ -1,0 +1,38 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+
+env:
+  # Pinned upstream LiveSplit release tag to build LiveSplit.Core/UpdateManager
+  # against - bump deliberately, not auto-resolved to "latest".
+  LIVESPLIT_REF: "1.8.37"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout LiveSplit.AutoStreamMarker
+        uses: actions/checkout@v4
+        with:
+          path: component
+
+      - name: Checkout LiveSplit (${{ env.LIVESPLIT_REF }})
+        uses: actions/checkout@v4
+        with:
+          repository: LiveSplit/LiveSplit
+          ref: ${{ env.LIVESPLIT_REF }}
+          submodules: recursive
+          path: livesplit
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Build
+        working-directory: component
+        run: dotnet build LiveSplit.AutoStreamMarker.slnx -c Release "-p:LsSrcPath=${{ github.workspace }}/livesplit/src"
