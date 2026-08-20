@@ -10,7 +10,7 @@ namespace LiveSplit.UI.Components
     {
         public string ComponentName => "Auto Stream Marker";
 
-        public string Description => "Automatic creates Twitch VOD markers in the current livestream.";
+        public string Description => "Automatic creates VOD markers in the current livestream/recording.";
 
         public ComponentCategory Category => ComponentCategory.Other;
 
@@ -22,6 +22,6 @@ namespace LiveSplit.UI.Components
         public string UpdateURL => "https://furious.github.io/LiveSplit.AutoStreamMarker/";
         public string XMLURL => this.UpdateURL + "update.xml";
 
-        public Version Version => Version.Parse("1.1.1");
+        public Version Version => Version.Parse("1.2.0");
     }
 }

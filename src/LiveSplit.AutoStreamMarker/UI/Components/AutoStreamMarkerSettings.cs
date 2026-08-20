@@ -6,6 +6,7 @@ using System.Net;
 using LiveSplit.Web;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Text;
 using System.Collections.Generic;
 using System.Net.Sockets;
@@ -14,13 +15,20 @@ namespace LiveSplit.UI.Components
 {
     public partial class AutoStreamMarkerSettings : UserControl
     {
-        public string TwitchClientID = "1202m5dzaxw5ohdw0r39ddfpuvcfdd";
+        public const string DefaultObsUrl = "ws://127.0.0.1:4455";
+        public const string TwitchClientID = "1202m5dzaxw5ohdw0r39ddfpuvcfdd";
+
         bool Listening = true;
         public string TwitchOAuth { get; set; }
         public bool MarkEverySplit { get; set; }
         public bool MarkResets { get; set; }
+        public bool WarnOffline { get; set; }
+        public bool ObsEnabled { get; set; }
+        public string ObsUrl { get; set; }
+        public string ObsPassword { get; set; }
 
         private WebClient Web { get; set; }
+        private ObsWebSocketClient ObsTestClient { get; set; }
 
         public AutoStreamMarkerSettings()
         {
@@ -28,14 +36,24 @@ namespace LiveSplit.UI.Components
 
             TwitchOAuth = "";
             MarkEverySplit =
-            MarkResets = true;
+            MarkResets =
+            WarnOffline = true;
+
+            ObsEnabled = false;
+            ObsUrl = DefaultObsUrl;
+            ObsPassword = "";
 
             Web = new WebClient();
             Web.Headers.Add("Client-ID", TwitchClientID);
             Web.Headers.Add("Accept", "application/vnd.twitchtv.v5+json");
+            //Web.Encoding = Encoding.UTF8;
 
             chkMarkEverySplit.DataBindings.Add("Checked", this, "MarkEverySplit");
             chkMarkResets.DataBindings.Add("Checked", this, "MarkResets");
+            chkWarnOffline.DataBindings.Add("Checked", this, "WarnOffline");
+            chkObsEnabled.DataBindings.Add("Checked", this, "ObsEnabled");
+            txtObsUrl.DataBindings.Add("Text", this, "ObsUrl");
+            txtObsPassword.DataBindings.Add("Text", this, "ObsPassword");
 
             ServicePointManager.Expect100Continue = true;
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
@@ -49,6 +67,10 @@ namespace LiveSplit.UI.Components
             TwitchOAuth = SettingsHelper.ParseString(element["TwitchOAuth"]);
             MarkEverySplit = SettingsHelper.ParseBool(element["MarkEverySplit"]);
             MarkResets = SettingsHelper.ParseBool(element["MarkResets"]);
+            WarnOffline = element["WarnOffline"] == null || SettingsHelper.ParseBool(element["WarnOffline"]);
+            ObsEnabled = element["ObsEnabled"] != null && SettingsHelper.ParseBool(element["ObsEnabled"]);
+            ObsUrl = element["ObsUrl"] != null ? SettingsHelper.ParseString(element["ObsUrl"]) : DefaultObsUrl;
+            ObsPassword = element["ObsPassword"] != null ? SettingsHelper.ParseString(element["ObsPassword"]) : "";
 
             if (!String.IsNullOrEmpty(TwitchOAuth))
             {
@@ -73,7 +95,42 @@ namespace LiveSplit.UI.Components
             return SettingsHelper.CreateSetting(document, parent, "Version", "1.0") ^
             SettingsHelper.CreateSetting(document, parent, "TwitchOAuth", TwitchOAuth) ^
             SettingsHelper.CreateSetting(document, parent, "MarkEverySplit", MarkEverySplit) ^
-            SettingsHelper.CreateSetting(document, parent, "MarkResets", MarkResets);
+            SettingsHelper.CreateSetting(document, parent, "MarkResets", MarkResets) ^
+            SettingsHelper.CreateSetting(document, parent, "WarnOffline", WarnOffline) ^
+            SettingsHelper.CreateSetting(document, parent, "ObsEnabled", ObsEnabled) ^
+            SettingsHelper.CreateSetting(document, parent, "ObsUrl", ObsUrl) ^
+            SettingsHelper.CreateSetting(document, parent, "ObsPassword", ObsPassword);
+        }
+
+        private async void TestObsConnection(object sender, EventArgs e)
+        {
+            btnObsTest.Enabled = false;
+            btnObsTest.Text = "Connecting...";
+            try
+            {
+                if (ObsTestClient == null)
+                {
+                    ObsTestClient = new ObsWebSocketClient();
+                }
+
+                await ObsTestClient.EnsureConnectedAsync(ObsUrl, ObsPassword);
+                btnObsTest.Text = "Connected!";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                btnObsTest.Text = "Connection failed";
+                MessageBox.Show(
+                    "Could not connect to OBS WebSocket:\n" + ex.Message,
+                    "Auto Stream Marker",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+            finally
+            {
+                btnObsTest.Enabled = true;
+            }
         }
 
         private void ShowLogin(object sender, EventArgs e)
@@ -82,16 +139,16 @@ namespace LiveSplit.UI.Components
 
                 Listen();
         }
-       
+
         private void FetchUser()
         {
             try
             {
                 Web.Headers["Authorization"] = "Bearer " + TwitchOAuth;
                 Console.WriteLine(Web.Headers.Get("Authorization"));
-                    
+
                 dynamic channel = JSON.FromString(Web.DownloadString("https://api.twitch.tv/helix/users"));
-                if (channel.data is List<Object> && channel.data.Count > 0)
+                if (channel.data != null && channel.data.Count > 0)
                 {
                     Avatar.ImageLocation = channel.data[0].profile_image_url;
                     Username.Text = String.Format("User: {0}", channel.data[0].display_name);
@@ -102,7 +159,7 @@ namespace LiveSplit.UI.Components
                 Console.WriteLine(e.Message);
             }
         }
-       
+
         private async void Listen()
         {
             TcpListener listener = new TcpListener(IPAddress.Loopback, 45000);
@@ -126,8 +183,8 @@ namespace LiveSplit.UI.Components
                 }
                 else if (request.Contains("GET /token"))
                 {
-                    response = "<html style='display:table; width:100%; height:100%'><body style='display:table-cell; vertical-align:middle; text-align:center; font-family:Sans-serif'><h1>Done, you can close this window now...</h1></body></html>";
                     TwitchOAuth = Regex.Match(request, "access_token=([^&]+)").Groups[1]?.Value ?? "";
+                    response = "<html style='display:table; width:100%; height:100%'><body style='display:table-cell; vertical-align:middle; text-align:center; font-family:Sans-serif'><h1>Done, you can close this window now...</h1></body></html>";
                     FetchUser();
                     Listening = false;
                 }
