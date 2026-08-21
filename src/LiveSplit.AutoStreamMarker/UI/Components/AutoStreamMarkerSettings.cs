@@ -53,6 +53,7 @@ namespace LiveSplit.UI.Components
             Web = new WebClient();
             Web.Headers.Add("Client-ID", TwitchClientID);
             Web.Headers.Add("Accept", "application/vnd.twitchtv.v5+json");
+            Web.Encoding = Encoding.UTF8;
 
             // OnPropertyChanged: txtLogFolder is set via a dialog, so it never gets the focus-loss OnValidation triggers.
             chkMarkEverySplit.DataBindings.Add("Checked", this, "MarkEverySplit", false, DataSourceUpdateMode.OnPropertyChanged);
