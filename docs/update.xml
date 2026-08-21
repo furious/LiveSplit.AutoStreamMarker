@@ -7,6 +7,12 @@
 		<changelog>
 			<change>OBS Chapter Marker support via websocket and fixed Twitch connection encoding bug.</change>
 			<change>Added a stream session log: while OBS is streaming, marks are appended to a per-date file.</change>
+			<change>Falls back to a separate per-date log file when OBS can't create a chapter marker (only Hybrid MP4 and Hybrid MOV recordings support them).</change>
+			<change>Connects to OBS only when needed for each action, instead of holding a persistent connection open.</change>
+			<change>Every marker is now tagged with the event that triggered it, e.g. [STARTED], [SPLIT], [FINISHED], [RESET].</change>
+			<change>Added a tunable timestamp offset setting to correct for a fixed encoder/muxer buffering delay in logged timestamps.</change>
+			<change>All notifications can now be toggled with a single switch.</change>
+			<change>Fixed settings controls not refreshing after saved values were loaded.</change>
 		</changelog>
 	</update>
 	<update version="1.1.1">
@@ -15,13 +21,6 @@
 		</files>
 		<changelog>
 			<change>Fixed update bug (please, download it again from the github), now it receives Twitch API tokens without running it as Administrator.</change>
-		</changelog>
-	</update>
-	<update version="1.1">
-		<files>
-			<file path="Components/LiveSplit.AutoStreamMarker.dll" status="changed" />
-		</files>
-		<changelog>
 			<change>Fixed bugs and using correct Twitch API endpoints.</change>
 		</changelog>
 	</update>
