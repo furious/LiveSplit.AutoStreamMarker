@@ -28,6 +28,7 @@ namespace LiveSplit.UI.Components
         public string ObsPassword { get; set; }
         public bool LogEnabled { get; set; }
         public string LogFolder { get; set; }
+        public string LogOffsetSeconds { get; set; }
 
         private WebClient Web { get; set; }
         private ObsWebSocketClient ObsTestClient { get; set; }
@@ -47,6 +48,7 @@ namespace LiveSplit.UI.Components
 
             LogEnabled = false;
             LogFolder = "";
+            LogOffsetSeconds = "0";
 
             Web = new WebClient();
             Web.Headers.Add("Client-ID", TwitchClientID);
@@ -61,6 +63,7 @@ namespace LiveSplit.UI.Components
             txtObsPassword.DataBindings.Add("Text", this, "ObsPassword", false, DataSourceUpdateMode.OnPropertyChanged);
             chkLogEnabled.DataBindings.Add("Checked", this, "LogEnabled", false, DataSourceUpdateMode.OnPropertyChanged);
             txtLogFolder.DataBindings.Add("Text", this, "LogFolder", false, DataSourceUpdateMode.OnPropertyChanged);
+            txtLogOffsetSeconds.DataBindings.Add("Text", this, "LogOffsetSeconds", false, DataSourceUpdateMode.OnPropertyChanged);
 
             ServicePointManager.Expect100Continue = true;
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
@@ -83,6 +86,7 @@ namespace LiveSplit.UI.Components
             ObsPassword = element["ObsPassword"] != null ? SettingsHelper.ParseString(element["ObsPassword"]) : "";
             LogEnabled = element["LogEnabled"] != null && SettingsHelper.ParseBool(element["LogEnabled"]);
             LogFolder = element["LogFolder"] != null ? SettingsHelper.ParseString(element["LogFolder"]) : "";
+            LogOffsetSeconds = element["LogOffsetSeconds"] != null ? SettingsHelper.ParseString(element["LogOffsetSeconds"]) : "0";
 
             // No INotifyPropertyChanged, so the bindings won't pick these up on their own.
             chkMarkEverySplit.Checked = MarkEverySplit;
@@ -93,6 +97,7 @@ namespace LiveSplit.UI.Components
             txtObsPassword.Text = ObsPassword;
             chkLogEnabled.Checked = LogEnabled;
             txtLogFolder.Text = LogFolder;
+            txtLogOffsetSeconds.Text = LogOffsetSeconds;
 
             if (!String.IsNullOrEmpty(TwitchOAuth))
             {
@@ -123,7 +128,8 @@ namespace LiveSplit.UI.Components
             SettingsHelper.CreateSetting(document, parent, "ObsUrl", ObsUrl) ^
             SettingsHelper.CreateSetting(document, parent, "ObsPassword", ObsPassword) ^
             SettingsHelper.CreateSetting(document, parent, "LogEnabled", LogEnabled) ^
-            SettingsHelper.CreateSetting(document, parent, "LogFolder", LogFolder);
+            SettingsHelper.CreateSetting(document, parent, "LogFolder", LogFolder) ^
+            SettingsHelper.CreateSetting(document, parent, "LogOffsetSeconds", LogOffsetSeconds);
         }
 
         private async void TestObsConnection(object sender, EventArgs e)

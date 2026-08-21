@@ -9,6 +9,8 @@ Features
 * Optionally create a chapter marker in OBS's own recording via obs-websocket
 * Optionally log stream sessions to a local file with timestamps (`H:MM:SS description`), whenever OBS is streaming (`yyyy-MM-dd-streaming.txt`)
 * Falls back to writing the mark to its own log file (`yyyy-MM-dd-recording.txt`) if OBS rejects the chapter marker - most commonly because its recording container doesn't support chapters (anything other than Hybrid MP4 or Hybrid MOV)
+* Every marker description is tagged with the event that triggered it, e.g. `[STARTED]`, `[SPLIT]`, `[FINISHED]`, `[RESET]`
+* A tunable timestamp offset (in the OBS WebSocket settings) can correct for a fixed encoder/muxer buffering delay if your logged timestamps consistently land a bit early or late
 
 Installation
 ------------

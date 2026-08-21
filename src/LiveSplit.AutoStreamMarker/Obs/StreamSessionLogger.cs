@@ -19,8 +19,9 @@ namespace LiveSplit.UI.Components
         }
 
         // durationMs/queryTimeUtc calibrate the session start once; each mark's elapsed time
-        // then comes from its own markTimeUtc against that fixed anchor.
-        public void AppendMark(bool isActive, double durationMs, DateTime queryTimeUtc, DateTime markTimeUtc, string folder, string description)
+        // then comes from its own markTimeUtc against that fixed anchor. offsetSeconds is a
+        // user-tunable correction for a fixed encoder/muxer buffering delay, if any.
+        public void AppendMark(bool isActive, double durationMs, DateTime queryTimeUtc, DateTime markTimeUtc, double offsetSeconds, string folder, string description)
         {
             if (!isActive)
             {
@@ -44,7 +45,7 @@ namespace LiveSplit.UI.Components
                     WasActive = true;
                 }
 
-                TimeSpan elapsed = markTimeUtc - SessionStartUtc;
+                TimeSpan elapsed = markTimeUtc.AddSeconds(offsetSeconds) - SessionStartUtc;
                 if (elapsed < TimeSpan.Zero)
                 {
                     elapsed = TimeSpan.Zero;

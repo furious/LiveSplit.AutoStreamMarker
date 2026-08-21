@@ -14,6 +14,7 @@ using System.Text.RegularExpressions;
 using System.Collections;
 using System.Collections.Specialized;
 using System.Collections.Generic;
+using System.Globalization;
 
 
 namespace LiveSplit.UI.Components
@@ -118,7 +119,7 @@ namespace LiveSplit.UI.Components
             }
             else if(State.CurrentPhase == TimerPhase.Running && Settings.MarkEverySplit)
             {
-                Mark(String.Format("split \"{0}\"", State.CurrentSplit.Name));
+                Mark("split", State.CurrentSplit.Name);
             }
         }
 
@@ -126,9 +127,14 @@ namespace LiveSplit.UI.Components
         {
             if (e != TimerPhase.Ended && Settings.MarkResets)
             {
-                Mark("reseted");
+                Mark("reset");
             }
         }
+        private double GetLogOffsetSeconds()
+        {
+            return double.TryParse(Settings.LogOffsetSeconds, NumberStyles.Float, CultureInfo.InvariantCulture, out double offset) ? offset : 0;
+        }
+
         private void Notify(String message)
         {
             if (!Settings.NotificationsEnabled)
@@ -140,16 +146,18 @@ namespace LiveSplit.UI.Components
             Notification.ShowBalloonTip(5000);
         }
 
-        private void Mark(string action)
+        private void Mark(string tag, string splitName = null)
         {
             // Before any OBS network work, so a slow connection can't skew the logged timestamp.
             DateTime markTimeUtc = DateTime.UtcNow;
 
             Action = String.Format(
-                "Run #{0} {1}: {2} - {3}",
-                State.Run.AttemptCount, action,
+                "Run #{0} [{1}]: {2} - {3}{4}",
+                State.Run.AttemptCount,
+                tag.ToUpperInvariant(),
                 String.IsNullOrEmpty(State.Run.GameName) ? "No Game" : State.Run.GameName,
-                String.IsNullOrEmpty(State.Run.CategoryName) ? "No Category" : State.Run.CategoryName
+                String.IsNullOrEmpty(State.Run.CategoryName) ? "No Category" : State.Run.CategoryName,
+                String.IsNullOrEmpty(splitName) ? "" : String.Format(" (\"{0}\")", splitName)
             );
 
             Task.Run(() => StreamMarker(Action));
@@ -229,7 +237,7 @@ namespace LiveSplit.UI.Components
                             DateTime queryTimeUtc = DateTime.UtcNow;
                             bool isRecording = recordStatus != null && recordStatus.outputActive != null && (bool)recordStatus.outputActive;
                             double durationMs = (recordStatus != null && recordStatus.outputDuration != null) ? Convert.ToDouble(recordStatus.outputDuration) : 0;
-                            RecordFallbackLogger.AppendMark(isRecording, durationMs, queryTimeUtc, markTimeUtc, Settings.LogFolder, chapterName);
+                            RecordFallbackLogger.AppendMark(isRecording, durationMs, queryTimeUtc, markTimeUtc, GetLogOffsetSeconds(), Settings.LogFolder, chapterName);
                         }
                     }
                 }
@@ -253,7 +261,7 @@ namespace LiveSplit.UI.Components
                         DateTime queryTimeUtc = DateTime.UtcNow;
                         bool isActive = status != null && status.outputActive != null && (bool)status.outputActive;
                         double durationMs = (status != null && status.outputDuration != null) ? Convert.ToDouble(status.outputDuration) : 0;
-                        SessionLogger.AppendMark(isActive, durationMs, queryTimeUtc, markTimeUtc, Settings.LogFolder, description);
+                        SessionLogger.AppendMark(isActive, durationMs, queryTimeUtc, markTimeUtc, GetLogOffsetSeconds(), Settings.LogFolder, description);
                     }
                     finally
                     {

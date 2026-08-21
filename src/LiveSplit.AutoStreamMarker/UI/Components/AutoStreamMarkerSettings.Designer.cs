@@ -52,6 +52,8 @@
             this.txtLogFolder = new System.Windows.Forms.TextBox();
             this.btnBrowseLogFolder = new System.Windows.Forms.Button();
             this.lblLogHint = new System.Windows.Forms.Label();
+            this.lblLogOffset = new System.Windows.Forms.Label();
+            this.txtLogOffsetSeconds = new System.Windows.Forms.TextBox();
             this.groupBox2.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -64,7 +66,7 @@
             this.groupBox2.Controls.Add(this.chkMarkResets);
             this.groupBox2.Controls.Add(this.chkMarkEverySplit);
             this.groupBox2.Dock = System.Windows.Forms.DockStyle.Top;
-            this.groupBox2.Location = new System.Drawing.Point(0, 343);
+            this.groupBox2.Location = new System.Drawing.Point(0, 373);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(475, 86);
             this.groupBox2.TabIndex = 13;
@@ -151,6 +153,8 @@
             //
             // groupBox3
             //
+            this.groupBox3.Controls.Add(this.txtLogOffsetSeconds);
+            this.groupBox3.Controls.Add(this.lblLogOffset);
             this.groupBox3.Controls.Add(this.lblLogHint);
             this.groupBox3.Controls.Add(this.btnBrowseLogFolder);
             this.groupBox3.Controls.Add(this.txtLogFolder);
@@ -165,7 +169,7 @@
             this.groupBox3.Dock = System.Windows.Forms.DockStyle.Top;
             this.groupBox3.Location = new System.Drawing.Point(0, 128);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(475, 215);
+            this.groupBox3.Size = new System.Drawing.Size(475, 245);
             this.groupBox3.TabIndex = 14;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "OBS WebSocket";
@@ -269,6 +273,22 @@
             this.lblLogHint.TabIndex = 10;
             this.lblLogHint.Text = "Format: H:MM:SS Description. Also used when OBS\'s recording format doesn\'t support chapters.";
             //
+            // lblLogOffset
+            //
+            this.lblLogOffset.AutoSize = true;
+            this.lblLogOffset.Location = new System.Drawing.Point(6, 213);
+            this.lblLogOffset.Name = "lblLogOffset";
+            this.lblLogOffset.Size = new System.Drawing.Size(150, 13);
+            this.lblLogOffset.TabIndex = 11;
+            this.lblLogOffset.Text = "Timestamp offset (seconds):";
+            //
+            // txtLogOffsetSeconds
+            //
+            this.txtLogOffsetSeconds.Location = new System.Drawing.Point(160, 210);
+            this.txtLogOffsetSeconds.Name = "txtLogOffsetSeconds";
+            this.txtLogOffsetSeconds.Size = new System.Drawing.Size(50, 20);
+            this.txtLogOffsetSeconds.TabIndex = 12;
+            //
             // AutoStreamMarkerSettings
             //
             this.AutoSize = true;
@@ -276,7 +296,7 @@
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox1);
             this.Name = "AutoStreamMarkerSettings";
-            this.Size = new System.Drawing.Size(475, 429);
+            this.Size = new System.Drawing.Size(475, 459);
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             this.groupBox1.ResumeLayout(false);
@@ -310,5 +330,7 @@
         private System.Windows.Forms.TextBox txtLogFolder;
         private System.Windows.Forms.Button btnBrowseLogFolder;
         private System.Windows.Forms.Label lblLogHint;
+        private System.Windows.Forms.Label lblLogOffset;
+        private System.Windows.Forms.TextBox txtLogOffsetSeconds;
     }
 }
