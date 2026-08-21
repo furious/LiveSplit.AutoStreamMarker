@@ -3,15 +3,24 @@ using System.IO;
 
 namespace LiveSplit.UI.Components
 {
-    // Use one instance per independent OBS output (streaming vs. recording) - each has its own timeline.
+    // One instance per independent OBS output (streaming vs. recording) - each writes its own file.
     public class StreamSessionLogger
     {
+        private readonly string FileSuffix;
         private readonly object WriteLock = new object();
 
         private bool WasActive;
         private string CurrentFilePath;
+        private DateTime SessionStartUtc;
 
-        public void AppendMark(bool isActive, double durationMs, string folder, string description)
+        public StreamSessionLogger(string fileSuffix)
+        {
+            FileSuffix = fileSuffix;
+        }
+
+        // durationMs/queryTimeUtc calibrate the session start once; each mark's elapsed time
+        // then comes from its own markTimeUtc against that fixed anchor.
+        public void AppendMark(bool isActive, double durationMs, DateTime queryTimeUtc, DateTime markTimeUtc, string folder, string description)
         {
             if (!isActive)
             {
@@ -19,22 +28,26 @@ namespace LiveSplit.UI.Components
                 return;
             }
 
-            TimeSpan elapsed = TimeSpan.FromMilliseconds(Math.Max(0, durationMs));
-
             lock (WriteLock)
             {
                 if (!WasActive)
                 {
-                    DateTime sessionStart = DateTime.Now - elapsed;
+                    SessionStartUtc = queryTimeUtc - TimeSpan.FromMilliseconds(Math.Max(0, durationMs));
                     Directory.CreateDirectory(folder);
-                    CurrentFilePath = Path.Combine(folder, sessionStart.ToString("yyyy-MM-dd") + ".txt");
+                    CurrentFilePath = Path.Combine(folder, SessionStartUtc.ToLocalTime().ToString("yyyy-MM-dd") + "-" + FileSuffix + ".txt");
 
                     File.AppendAllText(CurrentFilePath, string.Format(
                         "=== Session started {0:yyyy-MM-dd HH:mm:ss} ==={1}",
-                        sessionStart, Environment.NewLine
+                        SessionStartUtc.ToLocalTime(), Environment.NewLine
                     ));
 
                     WasActive = true;
+                }
+
+                TimeSpan elapsed = markTimeUtc - SessionStartUtc;
+                if (elapsed < TimeSpan.Zero)
+                {
+                    elapsed = TimeSpan.Zero;
                 }
 
                 File.AppendAllText(CurrentFilePath, string.Format(

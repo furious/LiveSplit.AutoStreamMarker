@@ -52,9 +52,7 @@ namespace LiveSplit.UI.Components
             Web.Headers.Add("Client-ID", TwitchClientID);
             Web.Headers.Add("Accept", "application/vnd.twitchtv.v5+json");
 
-            // OnPropertyChanged so each control pushes into its property immediately -
-            // the default OnValidation mode only pushes on focus loss, which txtLogFolder
-            // never gets (its text is set from a modal FolderBrowserDialog, not typed).
+            // OnPropertyChanged: txtLogFolder is set via a dialog, so it never gets the focus-loss OnValidation triggers.
             chkMarkEverySplit.DataBindings.Add("Checked", this, "MarkEverySplit", false, DataSourceUpdateMode.OnPropertyChanged);
             chkMarkResets.DataBindings.Add("Checked", this, "MarkResets", false, DataSourceUpdateMode.OnPropertyChanged);
             chkNotificationsEnabled.DataBindings.Add("Checked", this, "NotificationsEnabled", false, DataSourceUpdateMode.OnPropertyChanged);
@@ -86,9 +84,7 @@ namespace LiveSplit.UI.Components
             LogEnabled = element["LogEnabled"] != null && SettingsHelper.ParseBool(element["LogEnabled"]);
             LogFolder = element["LogFolder"] != null ? SettingsHelper.ParseString(element["LogFolder"]) : "";
 
-            // The controls above were bound once in the constructor; since this
-            // class doesn't implement INotifyPropertyChanged, the bindings never
-            // pull these newly-loaded values back into the controls on their own.
+            // No INotifyPropertyChanged, so the bindings won't pick these up on their own.
             chkMarkEverySplit.Checked = MarkEverySplit;
             chkMarkResets.Checked = MarkResets;
             chkNotificationsEnabled.Checked = NotificationsEnabled;

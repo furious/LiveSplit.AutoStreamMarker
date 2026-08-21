@@ -105,32 +105,6 @@ namespace LiveSplit.UI.Components
             return SendRequestAsync("GetRecordStatus", new DynamicJsonObject());
         }
 
-        public async Task<string> GetProfileParameterAsync(string category, string name)
-        {
-            dynamic requestData = new DynamicJsonObject();
-            requestData.parameterCategory = category;
-            requestData.parameterName = name;
-
-            dynamic response = await SendRequestAsync("GetProfileParameter", requestData).ConfigureAwait(false);
-            return (response != null && response.parameterValue != null) ? (string)response.parameterValue : null;
-        }
-
-        // Only Hybrid MP4 and MKV support embedded chapters.
-        public async Task<bool> RecordingSupportsChaptersAsync()
-        {
-            string mode = await GetProfileParameterAsync("Output", "Mode").ConfigureAwait(false);
-            string category = String.Equals(mode, "Advanced", StringComparison.OrdinalIgnoreCase) ? "AdvOut" : "SimpleOutput";
-
-            string format = await GetProfileParameterAsync(category, "RecFormat2").ConfigureAwait(false);
-            if (String.IsNullOrEmpty(format))
-            {
-                format = await GetProfileParameterAsync(category, "RecFormat").ConfigureAwait(false);
-            }
-
-            return String.Equals(format, "hybrid_mp4", StringComparison.OrdinalIgnoreCase)
-                || String.Equals(format, "mkv", StringComparison.OrdinalIgnoreCase);
-        }
-
         private async Task<dynamic> SendRequestAsync(string requestType, dynamic requestData)
         {
             if (!IsConnected)

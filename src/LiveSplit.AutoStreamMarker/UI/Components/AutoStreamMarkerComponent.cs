@@ -26,6 +26,7 @@ namespace LiveSplit.UI.Components
         public bool ShowLoginInfo { get; set; }
         public bool ShowStreamInfo { get; set; }
         public bool ShowObsInfo { get; set; }
+        public bool ShowChapterFallbackInfo { get; set; }
         public bool ShowLogInfo { get; set; }
 
         private LiveSplitState State { get; set; }
@@ -45,12 +46,13 @@ namespace LiveSplit.UI.Components
             ShowLoginInfo = true;
             ShowStreamInfo = true;
             ShowObsInfo = true;
+            ShowChapterFallbackInfo = true;
             ShowLogInfo = true;
 
             State = state;
             Settings = new AutoStreamMarkerSettings();
-            SessionLogger = new StreamSessionLogger();
-            RecordFallbackLogger = new StreamSessionLogger();
+            SessionLogger = new StreamSessionLogger("streaming");
+            RecordFallbackLogger = new StreamSessionLogger("recording");
 
             Notification = new NotifyIcon
             {
@@ -140,6 +142,9 @@ namespace LiveSplit.UI.Components
 
         private void Mark(string action)
         {
+            // Before any OBS network work, so a slow connection can't skew the logged timestamp.
+            DateTime markTimeUtc = DateTime.UtcNow;
+
             Action = String.Format(
                 "Run #{0} {1}: {2} - {3}",
                 State.Run.AttemptCount, action,
@@ -151,12 +156,12 @@ namespace LiveSplit.UI.Components
 
             if (Settings.ObsEnabled)
             {
-                Task.Run(() => TriggerObsChapterAsync(Action));
+                Task.Run(() => TriggerObsChapterAsync(Action, markTimeUtc));
             }
 
             if (Settings.LogEnabled)
             {
-                Task.Run(() => TriggerStreamLogAsync(Action));
+                Task.Run(() => TriggerStreamLogAsync(Action, markTimeUtc));
             }
         }
 
@@ -179,53 +184,63 @@ namespace LiveSplit.UI.Components
             }
         }
 
-        private async Task TriggerObsChapterAsync(string chapterName)
+        private async Task TriggerObsChapterAsync(string chapterName, DateTime markTimeUtc)
         {
-            try
+            using (var obs = new ObsWebSocketClient())
             {
-                using (var obs = new ObsWebSocketClient())
+                try
                 {
                     await obs.EnsureConnectedAsync(Settings.ObsUrl, Settings.ObsPassword);
-                    try
+                    ShowObsInfo = true;
+                }
+                catch (Exception ex)
+                {
+                    if (ShowObsInfo)
                     {
-                        if (await obs.RecordingSupportsChaptersAsync())
-                        {
-                            await obs.CreateRecordChapterAsync(chapterName);
-                            Console.WriteLine("OBS chapter marker created: " + chapterName);
-                        }
-                        else if (!String.IsNullOrEmpty(Settings.LogFolder))
-                        {
-                            dynamic recordStatus = await obs.GetRecordStatusAsync();
-                            bool isRecording = recordStatus != null && recordStatus.outputActive != null && (bool)recordStatus.outputActive;
-                            double durationMs = (recordStatus != null && recordStatus.outputDuration != null) ? Convert.ToDouble(recordStatus.outputDuration) : 0;
-                            RecordFallbackLogger.AppendMark(isRecording, durationMs, Settings.LogFolder, chapterName);
-                            Console.WriteLine("OBS recording format doesn't support chapters, wrote mark to file instead: " + chapterName);
-                        }
-                        else
-                        {
-                            Console.WriteLine("OBS recording format doesn't support chapters and no log folder is configured, mark not saved: " + chapterName);
-                        }
+                        ShowObsInfo = false;
+                        Notify("Could not connect to OBS. Check your OBS WebSocket settings...");
                     }
-                    finally
-                    {
-                        await obs.DisconnectAsync();
-                    }
+                    Console.WriteLine(ex.Message);
+                    return;
                 }
 
-                ShowObsInfo = true;
-            }
-            catch (Exception ex)
-            {
-                if (ShowObsInfo)
+                try
                 {
-                    ShowObsInfo = false;
-                    Notify("Could not create an OBS chapter marker. Check your OBS WebSocket settings...");
+                    try
+                    {
+                        await obs.CreateRecordChapterAsync(chapterName);
+                        Console.WriteLine("OBS chapter marker created: " + chapterName);
+                        ShowChapterFallbackInfo = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        // Only Hybrid MP4/MOV support embedded chapters; fall back to the file log.
+                        Console.WriteLine("OBS could not create a chapter marker: " + ex.Message);
+
+                        if (ShowChapterFallbackInfo)
+                        {
+                            ShowChapterFallbackInfo = false;
+                            Notify("OBS couldn't create a chapter marker - check its recording output settings (only Hybrid MP4 and Hybrid MOV support chapters). Marks are being logged to file instead.");
+                        }
+
+                        if (!String.IsNullOrEmpty(Settings.LogFolder))
+                        {
+                            dynamic recordStatus = await obs.GetRecordStatusAsync();
+                            DateTime queryTimeUtc = DateTime.UtcNow;
+                            bool isRecording = recordStatus != null && recordStatus.outputActive != null && (bool)recordStatus.outputActive;
+                            double durationMs = (recordStatus != null && recordStatus.outputDuration != null) ? Convert.ToDouble(recordStatus.outputDuration) : 0;
+                            RecordFallbackLogger.AppendMark(isRecording, durationMs, queryTimeUtc, markTimeUtc, Settings.LogFolder, chapterName);
+                        }
+                    }
                 }
-                Console.WriteLine(ex.Message);
+                finally
+                {
+                    await obs.DisconnectAsync();
+                }
             }
         }
 
-        private async Task TriggerStreamLogAsync(string description)
+        private async Task TriggerStreamLogAsync(string description, DateTime markTimeUtc)
         {
             try
             {
@@ -235,9 +250,10 @@ namespace LiveSplit.UI.Components
                     try
                     {
                         dynamic status = await obs.GetStreamStatusAsync();
+                        DateTime queryTimeUtc = DateTime.UtcNow;
                         bool isActive = status != null && status.outputActive != null && (bool)status.outputActive;
                         double durationMs = (status != null && status.outputDuration != null) ? Convert.ToDouble(status.outputDuration) : 0;
-                        SessionLogger.AppendMark(isActive, durationMs, Settings.LogFolder, description);
+                        SessionLogger.AppendMark(isActive, durationMs, queryTimeUtc, markTimeUtc, Settings.LogFolder, description);
                     }
                     finally
                     {
